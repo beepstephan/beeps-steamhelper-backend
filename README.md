@@ -1,4 +1,4 @@
-# Beeps SteamHelper Backend
+# Beeps SteamHelper Backend (готово на 60%)
 Бекенд-частина веб-додатку для аналізу Steam-профілів.
 
 ## Опис
