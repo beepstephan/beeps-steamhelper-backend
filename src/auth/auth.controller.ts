@@ -56,6 +56,7 @@ export class AuthController {
     games: GameWithGenre[];
     activity: { last3Days: number; last2Weeks: number; lastMonth: number };
     totalGames: number;
+    multiplayerStats: { multiplayerTime: number; singleplayerTime: number; mixedTime: number };
   }> {
     return this.authService.getGames(steamId);
   }

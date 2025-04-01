@@ -6,11 +6,15 @@ import { SteamStrategy } from './steam.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { RedisService } from 'src/common/redis/redis.service';
+import { User, Game, UserGame } from './entities';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'steam' }),
+    TypeOrmModule.forFeature([User, Game, UserGame]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -21,6 +25,6 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, SteamStrategy, JwtStrategy],
+  providers: [AuthService, SteamStrategy, JwtStrategy, RedisService],
 })
 export class AuthModule {}
