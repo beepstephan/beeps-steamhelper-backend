@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../../user/entities/user.entity';
 import { Game } from './game.entity';
 
 @Entity()
@@ -21,4 +21,7 @@ export class UserGame {
 
   @Column()
   updatedAt: Date;
+
+  @Column({ default: false })
+  isFavorite: boolean;
 }
