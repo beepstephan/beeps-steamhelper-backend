@@ -1,15 +1,17 @@
 import { Controller, Get, Req, Res, UseGuards, Param, Query, Post, Delete, Body, ValidationPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+
 import { AuthService } from './auth.service';
-import { UserService } from '../../domain/user/user.service';
-import { GameService } from '../../domain/game/game.service';
-import { SteamApiService } from '../../domain/game/steam-api.service';
+import { UserService } from '../../domain/user';
+import { SteamApiService, GameService } from '../../domain/game';
 import { RecommendationService } from '../../domain/recommendations/recommendation.service';
 import { FavoritesService } from '../../domain/favorites/favorites.service';
 import { SteamUser } from './interfaces/steam-user.interface';
+
 import {
   UserDto,
   GamesResponseDto,
@@ -19,7 +21,7 @@ import {
   AddFavoriteDto,
   UserProfileDto,
 } from './dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
+
 
 @ApiTags('auth')
 @Controller('auth')

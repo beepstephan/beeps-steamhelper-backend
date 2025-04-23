@@ -1,25 +1,24 @@
-import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { Module, ValidationPipe } from '@nestjs/common';
+import { APP_PIPE } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
-import { SteamStrategy } from './steam.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './jwt.strategy';
-import { RedisService } from '../../common/redis/redis.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../../domain/user/entities/user.entity';
-import { Game } from '../../domain/game/entities/game.entity';
-import { UserGame } from '../../domain/game/entities/user-game.entity';
-import { UserService } from '../../domain/user/user.service';
-import { UserRepository } from '../../domain/user/user.repository';
-import { SteamApiService } from '../../domain/game/steam-api.service';
-import { GameService } from '../../domain/game/game.service';
-import { GameRepository } from '../../domain/game/game.repository';
+
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { SteamStrategy } from './steam.strategy';
+import { JwtStrategy } from './jwt.strategy';
+
+import { RedisService } from '../../common/redis/redis.service';
+
+import { User, UserService, UserRepository} from '../../domain/user';
+
+import { Game, UserGame, SteamApiService, GameService, GameRepository } from '../../domain/game';
+
 import { RecommendationService } from '../../domain/recommendations/recommendation.service';
 import { FavoritesService } from '../../domain/favorites/favorites.service';
-import { APP_PIPE } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+
 
 @Module({
   imports: [
