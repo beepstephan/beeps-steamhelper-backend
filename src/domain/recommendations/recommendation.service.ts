@@ -5,25 +5,6 @@ import OpenAI from 'openai';
 import { ConfigService } from '@nestjs/config';
 import { RecommendationsDto, RecommendedGameDto } from '../../modules/auth/dto/recommendation.dto';
 
-function getLevenshteinDistance(a: string, b: string): number {
-  const matrix = Array(b.length + 1)
-    .fill(null)
-    .map(() => Array(a.length + 1).fill(null));
-  for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
-  for (let j = 1; j <= b.length; j++) {
-    for (let i = 1; i <= a.length; i++) {
-      const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + indicator,
-      );
-    }
-  }
-  return matrix[b.length][a.length];
-}
-
 @Injectable()
 export class RecommendationService {
   private openai: OpenAI;
@@ -140,54 +121,41 @@ export class RecommendationService {
 
     try {
       const response = await this.steamApiService.getAppList();
-      const appList = response.data.applist.apps;
+      if (!response || !response.applist || !response.applist.apps) {
+        console.error(`Failed to fetch app list for ${gameName}`);
+        await this.redisService.set(cacheKey, null, 86400);
+        return null;
+      }
 
-      const exactMatch = appList.find(app => app.name.toLowerCase() === gameName.toLowerCase());
+      const appList = response.applist.apps;
+
+      const normalizedGameName = gameName
+        .toLowerCase()
+        .replace(/[^a-z0-9: ]/g, '')
+        .trim();
+
+      console.log(`Нормалізована назва для пошуку: "${normalizedGameName}"`);
+
+      const exactMatch = appList.find(app => {
+        const normalizedAppName = app.name
+          .toLowerCase()
+          .replace(/[^a-z0-9: ]/g, '')
+          .trim();
+        return normalizedAppName === normalizedGameName;
+      });
+
       if (exactMatch) {
+        console.log(`Точний збіг для "${gameName}": "${exactMatch.name}" (appid: ${exactMatch.appid})`);
         await this.redisService.set(cacheKey, exactMatch.appid, 604800);
         return exactMatch.appid;
       }
 
-      const candidates = appList
-        .map(app => ({
-          appid: app.appid,
-          name: app.name,
-          distance: getLevenshteinDistance(
-            app.name.toLowerCase().replace(/[^a-z0-9: ]/g, ''),
-            gameName.toLowerCase().replace(/[^a-z0-9: ]/g, ''),
-          ),
-        }))
-        .filter(candidate => candidate.distance <= Math.min(3, gameName.length / 2))
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 5);
-
-      if (candidates.length > 0) {
-        for (const candidate of candidates) {
-          await this.delay(500);
-          const appDetails = await this.steamApiService.getAppDetails(candidate.appid);
-          if (appDetails && appDetails.success) {
-            const officialName = appDetails.name.toLowerCase().replace(/[^a-z0-9: ]/g, '');
-            const inputName = gameName.toLowerCase().replace(/[^a-z0-9: ]/g, '');
-            const distance = getLevenshteinDistance(officialName, inputName);
-            if (
-              officialName === inputName ||
-              distance <= Math.min(2, gameName.length / 3) ||
-              officialName.includes(inputName) ||
-              inputName.includes(officialName)
-            ) {
-              console.log(`Точний матч для "${gameName}": "${appDetails.name}" (appid: ${candidate.appid})`);
-              await this.redisService.set(cacheKey, candidate.appid, 604800);
-              return candidate.appid;
-            }
-          }
-        }
-      }
-
-      console.warn(`Гра "${gameName}" не знайдена в Steam`);
+      console.warn(`Гра "${gameName}" не знайдена в Steam (немає точного збігу після нормалізації)`);
       await this.redisService.set(cacheKey, null, 86400);
       return null;
     } catch (err) {
       console.error(`Помилка пошуку appid для ${gameName}: ${err.message}`);
+      await this.redisService.set(cacheKey, null, 86400);
       return null;
     }
   }
